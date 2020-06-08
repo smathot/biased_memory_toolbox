@@ -155,6 +155,22 @@ def response_bias(memoranda, responses, categories):
 
 def test_chance_performance(memoranda, responses):
     
+    """Tests whether responses are above chance. This is done by first
+    determining the real error and the memoranda, and then determinining the
+    shuffled error between the memoranda and the shuffled responses. Finally,
+    an independent t-test is done to compare the real and shuffled error. The
+    exact values will vary because the shuffling is random.
+    
+    Parameters
+    ----------
+    memoranda : A DataMatrix column with memoranda values in degrees (0 - 360)
+    responses : A DataMatrix column with response values in degrees (0 - 360)
+    
+    Returns
+    -------
+    A (t_value, p_value) tuple.
+    """
+    
     real_errors = np.abs(_distance(memoranda, responses))
     shuffled_responses = responses[:]
     np.random.shuffle(shuffled_responses)
