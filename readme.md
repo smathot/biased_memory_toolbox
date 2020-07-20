@@ -8,7 +8,7 @@ Copyright 2020
 
 ## Usage
 
-See `analyze.py` for an example use case.
+See `example.py` and `example.ipynb` for an example use case.
 
 
 ## License
