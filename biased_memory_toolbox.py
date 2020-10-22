@@ -53,7 +53,7 @@ def mixture_model_pdf(x, precision=100, guess_rate=.2, bias=0):
     return pdf_vonmises * (1 - guess_rate) + pdf_uniform * guess_rate
 
 
-def fit_mixture_model(x):
+def fit_mixture_model(x, x0=X0, bounds=BOUNDS):
     
     """Fits the biased mixture model to a dataset. The input to the mixture
     model should generally be a response bias as determined by
@@ -68,9 +68,8 @@ def fit_mixture_model(x):
     A (precision, guess_rate, bias) tuple.
     """        
     
-    fit = optimize.minimize(_error, x0=X0, args=x, bounds=BOUNDS)
-    precision, guess_rate, bias = fit.x
-    return precision, guess_rate, bias
+    fit = optimize.minimize(_error, x0=x0, args=x, bounds=bounds)
+    return fit.x
 
 
 def category(x, categories):
@@ -117,7 +116,7 @@ def prototype(x, categories):
     return categories[category(x, categories)][2]
     
     
-def response_bias(memoranda, responses, categories):
+def response_bias(memoranda, responses, categories=None):
     
     """Calculates the response bias, which is the error between a response and
     a memorandum in the direction of the prototype for the category to which
@@ -142,6 +141,8 @@ def response_bias(memoranda, responses, categories):
     """
     
     errors = _distance(memoranda, responses)
+    if categories is None:
+        return errors
     protos = memoranda @ (lambda x: prototype(x, categories))
     proto_dists = _distance(memoranda, protos)
     bias = []
@@ -191,6 +192,15 @@ def _distance(x, y):
 
 def _error(args, x):
     
-    """A helper function used for minimum likelihood estimation."""
+    """A helper function used for maximum likelihood estimation. This gives the
+    error that should be minimized.
+    """
     
     return -np.sum(np.log(mixture_model_pdf(x, *args)))
+
+
+def aic(args, x):
+    
+    """A helper function used for Akaike information criterion."""
+    
+    return 2 * len(args) - 2 * np.log(np.prod(mixture_model_pdf(x, *args)))
