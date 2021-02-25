@@ -8,7 +8,7 @@ Copyright 2020 - 2021
 
 ## Usage
 
-See `example.py` and `example.ipynb` for an example use case.
+See `example.py` and `example.html` for an example use case.
 
 
 ## Installation
