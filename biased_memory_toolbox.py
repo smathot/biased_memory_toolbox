@@ -1,8 +1,26 @@
 # coding=utf-8
+"""
+This file is part of biased memory toolbox.
+
+biased memory toolbox is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+biased memory toolbox is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with biased memory toolbox.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
+
+__version__ = '1.0.0'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
@@ -85,7 +103,7 @@ def category(x, categories):
     Returns
     -------
     A category description.
-    """    
+    """
     
     for category, (minval, maxval, proto) in categories.items():
         if minval <= x < maxval:

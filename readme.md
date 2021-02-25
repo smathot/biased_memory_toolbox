@@ -3,12 +3,19 @@
 *A Python toolbox for mixture modeling of data from visual-working-memory experiments*
 
 Cherie Zhou (@cherieai) and Sebastiaan Mathôt (@smathot) <br />
-Copyright 2020
+Copyright 2020 - 2021
 
 
 ## Usage
 
 See `example.py` and `example.ipynb` for an example use case.
+
+
+## Installation
+
+```
+pip install biased_memory_toolbox
+```
 
 
 ## License
