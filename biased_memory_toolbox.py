@@ -26,11 +26,13 @@ __version__ = '1.0.0'
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
 # values are hues in 0 - 360 in HSV space such that 0 is red.
 DEFAULT_CATEGORIES = {
-    'red': (-26.2058823530101, 33.676470588249, 5.999999999993606),
-    'pink': (275.52941176473, 333.79411764698995, 281.6806722688825),
-    'blue': (163.50000000003, 275.52941176473, 229.89915966385712),
-    'green': (69.88235294115, 163.50000000003, 121.86554621849697),
-    'yellow': (33.676470588249, 69.88235294115, 57.91596638651193)
+    'red': (-19, 16, 358),
+    'orange': (16, 47, 31),
+    'yellow': (47, 75, 61),
+    'green': (75, 167, 121),
+    'blue': (167, 261, 214),
+    'purple': (261, 295, 278),
+    'pink': (295, 341, 318),
 }
 
 # Starting parameters of the fit
