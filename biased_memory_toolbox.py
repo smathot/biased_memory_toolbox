@@ -26,7 +26,7 @@ __version__ = '1.0.0'
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
 # values are hues in 0 - 360 in HSV space such that 0 is red.
 DEFAULT_CATEGORIES = {
-    'red': (-19, 16, 358),
+    'red': (-19, 16, -1.5),
     'orange': (16, 47, 31),
     'yellow': (47, 75, 61),
     'green': (75, 167, 121),
