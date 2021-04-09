@@ -20,7 +20,7 @@ import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
