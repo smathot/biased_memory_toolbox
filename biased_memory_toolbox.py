@@ -17,10 +17,12 @@ along with biased memory toolbox.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import numpy as np
+import functools
+from frozendict import frozendict
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
@@ -117,6 +119,7 @@ def category(x, categories):
     raise ValueError('{} has no category'.format(x))  
 
 
+@functools.cache
 def prototype(x, categories):
     
     """Gets the prototype for the category to which x belongs. For example, if
@@ -130,7 +133,7 @@ def prototype(x, categories):
     
     Returns
     -------
-    A protopy value in degrees (0 360).
+    A prototype value in degrees (0 360).
     """
        
     return categories[category(x, categories)][2]
@@ -163,6 +166,7 @@ def response_bias(memoranda, responses, categories=None):
     errors = _distance(memoranda, responses)
     if categories is None:
         return errors
+    categories = frozendict(categories)
     protos = memoranda @ (lambda x: prototype(x, categories))
     proto_dists = _distance(memoranda, protos)
     bias = []
