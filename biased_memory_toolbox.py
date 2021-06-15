@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with biased memory toolbox.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import random
 import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
@@ -199,7 +200,7 @@ def test_chance_performance(memoranda, responses):
     
     real_errors = np.abs(_distance(memoranda, responses))
     shuffled_responses = responses[:]
-    np.random.shuffle(shuffled_responses)
+    random.shuffle(shuffled_responses)
     fake_errors = np.abs(_distance(memoranda, shuffled_responses))
     return ttest_ind(real_errors, fake_errors)
 
