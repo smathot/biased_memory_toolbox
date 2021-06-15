@@ -17,8 +17,6 @@ along with biased memory toolbox.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import numpy as np
-import functools
-from frozendict import frozendict
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
@@ -119,7 +117,6 @@ def category(x, categories):
     raise ValueError('{} has no category'.format(x))  
 
 
-@functools.cache
 def prototype(x, categories):
     
     """Gets the prototype for the category to which x belongs. For example, if
@@ -166,8 +163,12 @@ def response_bias(memoranda, responses, categories=None):
     errors = _distance(memoranda, responses)
     if categories is None:
         return errors
-    categories = frozendict(categories)
-    protos = memoranda @ (lambda x: prototype(x, categories))
+    cache = {}
+    protos = np.empty(len(memoranda))
+    for i, memorandum in enumerate(memoranda):
+        if memorandum not in cache:
+            cache[memorandum] = prototype(memorandum, categories)
+        protos[i] = cache[memorandum]
     proto_dists = _distance(memoranda, protos)
     bias = []
     for error, proto_dist in zip(errors, proto_dists):
