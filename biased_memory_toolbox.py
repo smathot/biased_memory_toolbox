@@ -115,7 +115,7 @@ def category(x, categories):
             return category
         if minval <= x + 360 < maxval:
             return category
-    raise ValueError('{} has no category'.format(x))  
+    raise ValueError('{} has no category'.format(x))
 
 
 def prototype(x, categories):
