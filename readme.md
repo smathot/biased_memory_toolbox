@@ -28,12 +28,11 @@ Read in a data file as a DataMatrix. There should be a column that contains the 
 
 
 
-~~~ .python
+```python
 from datamatrix import io
 
 dm = io.readtxt('example-data/example-participant.csv')
-
-~~~
+```
 
 
 
@@ -41,20 +40,17 @@ As a first step, we check whether the participant scored significantly (*p* < .0
 
 
 
-~~~ .python
+```python
 import biased_memory_toolbox as bmt
 
 t, *p* = bmt.test_chance_performance(dm.memory_hue, dm.response_hue)
 print('testing performance: t = {:.4f}, *p* = {:.4f}'.format(t, p))
-
-~~~
+```
 
 __Output:__
-
-~~~ .text
-testing performance: *t* = -58.4170, *p* = 0.0000
-
-~~~
+``` .text
+testing performance: *t* = -57.6994, *p* = 0.0000
+```
 
 
 
@@ -64,10 +60,9 @@ To do so, we wirst calculate the response error, which is simply the circular di
 
 
 
-~~~ .python
+```python
 dm.response_error = bmt.response_bias(dm.memory_hue, dm.response_hue)
-
-~~~
+```
 
 
 
@@ -76,21 +71,18 @@ only get two parameters: the precision and the guess rate.
 
 
 
-~~~ .python
+```python
 precision, guess_rate = bmt.fit_mixture_model(
     dm.response_error,
     include_bias=False
 )
 print('precision: {:.4f}, guess rate: {:.4f}'.format(precision, guess_rate))
-
-~~~
+```
 
 __Output:__
-
-~~~ .text
+``` .text
 precision: 1721.6386, guess rate: 0.0627
-
-~~~
+```
 
 
 
@@ -98,14 +90,13 @@ Next we calculate the response bias, which is similar to the response error exce
 
 
 
-~~~ .python
+```python
 dm.response_bias = bmt.response_bias(
     dm.memory_hue,
     dm.response_hue,
     categories=bmt.DEFAULT_CATEGORIES
 )
-
-~~~
+```
 
 
 
@@ -113,7 +104,7 @@ Next we fit the model again by calling `fit_mixture_model()`. We now also get a 
 
 
 
-~~~ .python
+```python
 precision, guess_rate, bias = bmt.fit_mixture_model(dm.response_bias)
 print(
     'precision: {:.4f}, guess rate: {:.4f}, bias: {:.4f}'.format(
@@ -122,15 +113,12 @@ print(
         bias
     )
 )
-
-~~~
+```
 
 __Output:__
-
-~~~ .text
+``` .text
 precision: 1725.9568, guess rate: 0.0626, bias: 0.5481
-
-~~~
+```
 
 
 
@@ -152,14 +140,16 @@ plt.subplot(122)
 plt.title('Histogram of response biases')
 plt.xlim(-50, 50)
 sns.distplot(dm.response_bias, kde=False)
-plt.show()
+plt.savefig('example.png')
 ```
+
+![](example.png)
 
 We can also fit a model that takes into account swap errors, as described by Bays, Catalao, and Husain (2009). To do so, we also need to specify the response bias (or plain error) with respect to the non-target items. Here, we select only those trials in which the set size was 3, and then create two new columns for the response bias with respect to the second and third memory colors, which were non-targets in this experiment. (The first color was the target color.)
 
 
 
-~~~ .python
+```python
 dm3 = dm.set_size == 3
 dm3.response_bias_nontarget2 = bmt.response_bias(
     dm3.hue2,
@@ -171,8 +161,7 @@ dm3.response_bias_nontarget3 = bmt.response_bias(
     dm3.response_hue,
     categories=bmt.DEFAULT_CATEGORIES
 )
-
-~~~
+```
 
 
 
@@ -180,7 +169,7 @@ By passing a list of non-target response biases, we get a new parameter: swap ra
 
 
 
-~~~ .python
+```python
 precision, guess_rate, bias, swap_rate = bmt.fit_mixture_model(
     x=dm3.response_bias,
     x_nontargets=[
@@ -196,15 +185,12 @@ print(
         swap_rate
     )
 )
-
-~~~
+```
 
 __Output:__
-
-~~~ .text
+``` .text
 precision: 785.2130, guess rate: 0.0000, bias: 1.3879, swap_rate: 0.0266
-
-~~~
+```
 
 
 

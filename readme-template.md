@@ -101,8 +101,10 @@ plt.subplot(122)
 plt.title('Histogram of response biases')
 plt.xlim(-50, 50)
 sns.distplot(dm.response_bias, kde=False)
-plt.show()
+plt.savefig('example.png')
 ```
+
+![](example.png)
 
 We can also fit a model that takes into account swap errors, as described by Bays, Catalao, and Husain (2009). To do so, we also need to specify the response bias (or plain error) with respect to the non-target items. Here, we select only those trials in which the set size was 3, and then create two new columns for the response bias with respect to the second and third memory colors, which were non-targets in this experiment. (The first color was the target color.)
 

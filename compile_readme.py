@@ -13,5 +13,7 @@ for m in re.finditer('```python(?P<code>.*?)```', text, re.DOTALL):
     )
     text = text.replace(m.group(0), new_block)
 md = build.MD(text)
+md = md.replace('~~~ .python', '```python')
+md = md.replace('\n~~~', '```')
 with open('readme.md', 'w') as fd:
     fd.write(md)
