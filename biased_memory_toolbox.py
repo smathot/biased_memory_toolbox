@@ -21,7 +21,7 @@ import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
@@ -37,17 +37,19 @@ DEFAULT_CATEGORIES = {
 }
 
 # Starting parameters of the fit
-X0 = [500, .2, 0]
+STARTING_PRECISION = 500
+STARTING_GUESS_RATE = .1
+STARTING_BIAS = 0
+STARTING_SWAP_RATE = .1
 # Realistic bounds for each parameter
-BOUNDS = [
-    (0, 10000),  # precision
-    (0, 1),  # guess rate
-    (-180, 180)  # bias
-]
+BOUNDS_PRECISION = 0, 10000
+BOUNDS_GUESS_RATE = 0, 1
+BOUNDS_BIAS = -180, 180
+BOUNDS_SWAP_RATE = 0, 1
 
 
-def mixture_model_pdf(x, precision=100, guess_rate=.2, bias=0):
-    
+def mixture_model_pdf(x, precision=STARTING_PRECISION,
+                      guess_rate=STARTING_GUESS_RATE, bias=STARTING_BIAS):
     """Returns a probability density function for a mixture model.
     
     Parameters
@@ -74,21 +76,46 @@ def mixture_model_pdf(x, precision=100, guess_rate=.2, bias=0):
     return pdf_vonmises * (1 - guess_rate) + pdf_uniform * guess_rate
 
 
-def fit_mixture_model(x, x0=X0, bounds=BOUNDS):
-    
+def fit_mixture_model(x, x_nontargets=None,
+                      include_bias=True, x0=None, bounds=None):
     """Fits the biased mixture model to a dataset. The input to the mixture
     model should generally be a response bias as determined by
-    `response_bias()`.
+    `response_bias()` when the bias parameter is fit, or a signed response
+    error when no bias parameter is fit.
     
     Parameters
     ----------
-    x : A DataMatrix column (or other iterable object) of response biases.
+    x : A DataMatrix column (or other iterable object) of response biases
+    x_nontargets : A list of DataMatrix columns (or other iterable objects) of
+                   response biases relative to non-targets. If this argument is
+                   provided, a swap rate is returned as a final parameter.
+    include_bias : Indicates whether the bias parameter should be fit as well.
+    x0 : A list of starting values for the parameters. Order: precision, guess
+         rate, bias. If no starting value is provided for a parameter, then it
+         is left at the default value of `mixture_model_pdf()`.
+    bounds : A list of (upper, lower) bound tuples for the parameters. If no
+             value is provided, then default values are used.
     
     Returns
     -------
-    A (precision, guess_rate, bias) tuple.
-    """        
+    A tuple with parameters. Depending on the arguments these are:
+    - precision, guess rate
+    - precision, guess rate, bias
+    - precision, guess rate, swap rate
+    - precision, guess rate, bias, swap rate
+    """
     
+    if x_nontargets is not None:
+        return _fit_swap_model(
+            x, x_nontargets, include_bias=include_bias, x0=x0, bounds=bounds)
+    if x0 is None:
+        x0 = [STARTING_PRECISION, STARTING_GUESS_RATE]
+        if include_bias:
+            x0.append(STARTING_BIAS)
+    if bounds is None:
+        bounds = [BOUNDS_PRECISION, BOUNDS_GUESS_RATE]
+        if include_bias:
+            bounds.append(BOUNDS_BIAS)
     fit = optimize.minimize(_error, x0=x0, args=x, bounds=bounds)
     return fit.x
 
@@ -230,3 +257,54 @@ def aic(args, x):
     """A helper function used for Akaike information criterion."""
     
     return 2 * len(args) - 2 * np.log(np.prod(mixture_model_pdf(x, *args)))
+
+
+def _swap_pdf(x_target, x_nontargets, precision=STARTING_PRECISION,
+              guess_rate=STARTING_GUESS_RATE, swap_rate=STARTING_SWAP_RATE,
+              bias=STARTING_BIAS):
+
+    pdf_vonmises_target = vonmises.pdf(
+        x=np.radians(x_target),
+        kappa=np.radians(precision),
+        loc=np.radians(bias)
+    )
+    pdf_vonmises_non_targets = [vonmises.pdf(
+        x=np.radians(x_nontarget),
+        kappa=np.radians(precision),
+        loc=np.radians(bias)
+    ) for x_nontarget in x_nontargets]
+    pdf_uniform = uniform.pdf(x_target, loc=-np.pi, scale=2*np.pi)
+    return (
+        pdf_vonmises_target * (1 - guess_rate - swap_rate)
+        + swap_rate * sum(pdf_vonmises_non_targets) / len(x_nontargets)
+        + pdf_uniform * guess_rate
+    )
+
+
+def _swap_error(args, x):
+    
+    return -np.sum(np.log(_swap_pdf(x[0], x[1], *args)))
+    
+
+def _fit_swap_model(x, x_nontargets=None,
+                    include_bias=True, x0=None, bounds=None):
+    if x0 is None:
+        x0 = [STARTING_PRECISION, STARTING_GUESS_RATE]
+        x0.append(STARTING_SWAP_RATE)
+        if include_bias:
+            x0.append(STARTING_BIAS)
+    if bounds is None:
+        bounds = [BOUNDS_PRECISION, BOUNDS_GUESS_RATE]
+        bounds.append(BOUNDS_SWAP_RATE)
+        if include_bias:
+            bounds.append(BOUNDS_BIAS)
+    fit = optimize.minimize(
+        _swap_error,
+        args=[
+            x,
+            x_nontargets],
+        x0=x0,
+        bounds=bounds)
+    if include_bias:
+        return fit.x[0], fit.x[1], fit.x[3], fit.x[2]
+    return fit.x
