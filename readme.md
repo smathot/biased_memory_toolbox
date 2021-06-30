@@ -22,9 +22,9 @@ pip install biased_memory_toolbox
 
 ## Usage
 
-This section focuses on using this module, and assumes that you have a basic understanding of mixture modeling of working memory data. If you want to know more about mixture modeling, please read the manuscript cited above.
+This section focuses on using the module, assuming that you have a basic understanding of mixture modeling of working memory data. If you want to know more about the theory behind mixture modeling, please read (for example) the manuscript cited above.
 
-Read in a data file as a DataMatrix. There should be a column that contains the memoranda (here: `memory_hue`) and a column that contains the responses (here: `response_hue`), both in degrees with values between 0 and 360.
+We start by reading in a data file using [DataMatrix](https://datamatrix.cogsci.nl/). The data should contain a column that contains the memoranda (here: `memory_hue`) and a column that contains the responses (here: `response_hue`), both in degrees with values between 0 and 360.
 
 
 
@@ -36,7 +36,7 @@ dm = io.readtxt('example-data/example-participant.csv')
 
 
 
-As a first step, we check whether the participant scored significantly (*p* < .05) above chance. This is done with a permutation test that is implemented as `test_chance_performance()`.
+As a first step, which is not related to mixture modeling per se, we check whether the participant performed significantly (*p* < .05) above chance. This is done with a permutation test that is implemented as `test_chance_performance()`. Here, low p-values indicate that performance deviates from chance.
 
 
 
@@ -49,14 +49,14 @@ print('testing performance: t = {:.4f}, *p* = {:.4f}'.format(t, p))
 
 __Output:__
 ``` .text
-testing performance: *t* = -57.6994, *p* = 0.0000
+testing performance: *t* = -56.7938, *p* = 0.0000
 ```
 
 
 
-Now we can actually fit the mixture model. We start by fitting a basic model in which only the precision and the guess rate is estimated, as in the original Zhang and Luck (2008) paper.
+Now let's fit the mixture model. We start with a basic model in which only the precision and the guess rate is estimated, as in the original [Zhang and Luck (2008)](https://doi.org/10.1038/nature06860) paper.
 
-To do so, we wirst calculate the response error, which is simply the circular distance between the memory hue and the response hue. This is done with `response_bias()`, which, when no categories are provided, simply calculates the error.
+To do so, we first calculate the response error, which is simply the circular distance between the memory hue (the color that the participant needed to remember) and the response hue (the color that the participant reproduced). This is done with `response_bias()`, which, when no categories are provided, simply calculates the response error.
 
 
 
@@ -66,7 +66,7 @@ dm.response_error = bmt.response_bias(dm.memory_hue, dm.response_hue)
 
 
 
-Next we fit the model with a simple call to `fix_mixture_model()`. By specifying `include_bias=False`, we fix the bias (the mean of the distribution) at 0, and thus
+We can fit the model with a simple call to `fix_mixture_model()`. By specifying `include_bias=False`, we fix the bias parameter (the mean of the distribution) at 0, and thus
 only get two parameters: the precision and the guess rate.
 
 
@@ -86,7 +86,9 @@ precision: 1721.6386, guess rate: 0.0627
 
 
 
-Next we calculate the response bias, which is similar to the response error except that it is recoded such that positive values reflect an error towards the prototype of the category that the memorandum belongs to. To calculate this we need to specify a `dict` with categories when calling `response_bias()`. A sensible default, based on ratings of human participants, is provided with the toolbox.
+Now let's fit a slightly more complex model that also includes a bias parameter. To do so, we first calculate the response 'bias', which is similar to the response error except that it is recoded such that positive values reflect a response error towards the prototype of the category that the memorandum belongs to. For example, if the participant saw a slightly aqua-ish shade of green but reproduced a pure green, then this would correspond to a positive response bias for that response.
+
+To calculate the response bias we need to specify a `dict` with category boundaries and prototypes when calling `response_bias()`. A sensible default (`DEFAULT_CATEGORIES`), based on ratings of human participants, is provided with the toolbox.
 
 
 
@@ -100,7 +102,7 @@ dm.response_bias = bmt.response_bias(
 
 
 
-Next we fit the model again by calling `fit_mixture_model()`. We now also get a bias parameter (because we did not specify `include_bias=False`) as described in Zhou, Lorist, and Mathôt (2021).
+Next we fit the model again by calling `fit_mixture_model()`. We now also get a bias parameter (because we did not specify `include_bias=False`) as described in [Zhou, Lorist, and Mathôt (2021)](https://osf.io/puq4v/).
 
 
 
@@ -122,7 +124,7 @@ precision: 1725.9568, guess rate: 0.0626, bias: 0.5481
 
 
 
-It also makes sense to visualize the model fit, to see if the model accurately captures the pattern of responses. We can do this by plotting a probability density function which is generated by `mixture_model_pdf()`.
+It also makes sense to visualize the model fit, to see if the model accurately captures the pattern of responses. We can do this by plotting a probability density function, which can be generated by `mixture_model_pdf()`.
 
 ```
 import numpy as np
@@ -145,7 +147,9 @@ plt.savefig('example.png')
 
 ![](example.png)
 
-We can also fit a model that takes into account swap errors, as described by Bays, Catalao, and Husain (2009). To do so, we also need to specify the response bias (or plain error) with respect to the non-target items. Here, we select only those trials in which the set size was 3, and then create two new columns for the response bias with respect to the second and third memory colors, which were non-targets in this experiment. (The first color was the target color.)
+We can also fit a model that takes into account swap errors, as described by [Bays, Catalao, and Husain (2009)](https://doi.org/10.1167/9.10.7). To do so, we need to also specify the response bias (or plain error) with respect to the non-target items.
+
+Here, we select only those trials in which the set size was 3, and then create two new columns for the response bias with respect to the second and third memory colors, which were non-targets in this experiment. (The first color was the target color.)
 
 
 
@@ -165,7 +169,7 @@ dm3.response_bias_nontarget3 = bmt.response_bias(
 
 
 
-By passing a list of non-target response biases, we get a new parameter: swap rate.
+By passing a list of non-target response biases, we get a fourth parameter: swap rate.
 
 
 
