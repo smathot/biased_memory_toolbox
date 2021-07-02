@@ -5,6 +5,8 @@
 Cherie Zhou (@cherieai) and Sebastiaan Mathôt (@smathot) <br />
 Copyright 2020 - 2021
 
+![](https://travis-ci.com/smathot/biased_memory_toolbox.svg?branch=master)
+
 
 ## Citation
 
@@ -49,7 +51,7 @@ print('testing performance: t = {:.4f}, p = {:.4f}'.format(t, p))
 
 __Output:__
 ``` .text
-testing performance: t = -56.6385, p = 0.0000
+testing performance: t = -54.4475, p = 0.0000
 ```
 
 

@@ -5,6 +5,8 @@
 Cherie Zhou (@cherieai) and Sebastiaan Mathôt (@smathot) <br />
 Copyright 2020 - 2021
 
+![](https://travis-ci.com/smathot/biased_memory_toolbox.svg?branch=master)
+
 
 ## Citation
 
