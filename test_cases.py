@@ -16,102 +16,151 @@ You should have received a copy of the GNU General Public License
 along with biased memory toolbox.  If not, see <http://www.gnu.org/licenses/>.
 """
 import math
+import itertools
 import pytest
 import numpy as np
 from datamatrix import DataMatrix
 import biased_memory_toolbox as bmt
 
-N = 1000
+N = 10000
 
 
-def test_bias():
-    """Simulate one set of noisy responses with a response bias on each trial,
-    and one set of noise responses without a response bias.
-    """
+def _precision_to_scale(precision):
+    
+    if precision == 500:
+        return 20
+    elif precision == 2000:
+        return 10
+    raise ValueError('Invalid precision')
+
+
+def test_with_bias_and_swap_rate():
+
     dm = DataMatrix(length=N)
-    dm.m = np.random.randint(0, 359, N)
-    dm.n = np.random.randint(-10, 10, N)
-    for row in dm:
-        category = bmt.category(row.m, bmt.DEFAULT_CATEGORIES)
-        row.r1 = .5 * (row.m + bmt.DEFAULT_CATEGORIES[category][2]) + row.n
-        row.r2 = row.m + row.n
-    dm.b1 = bmt.response_bias(dm.m, dm.r1, bmt.DEFAULT_CATEGORIES)
-    _, _, b1 = bmt.fit_mixture_model(dm.b1)
-    assert b1 > 1  # Should have a positive response bias
-    dm.b2 = bmt.response_bias(dm.m, dm.r2, bmt.DEFAULT_CATEGORIES)
-    _, _, b2 = bmt.fit_mixture_model(dm.b2)
-    assert math.isclose(b2, 0, abs_tol=1)  # Should have no response bias
+    for precision, guess_rate, bias, swap_rate in itertools.product(
+        (500, 2000),
+        (0, .25),
+        (0, 2.5),
+        (0, .25)
+    ):
+        dm.target = np.random.randint(0, 359, N)
+        dm.nontarget1 = dm.target + 180
+        dm.responses = dm.target[:]
+        n_guess = int(N * guess_rate)
+        n_swap = int(N * swap_rate)
+        dm.responses[:n_guess] = np.random.randint(0, 359, n_guess)
+        dm.responses[n_guess:n_guess +
+                     n_swap] = dm.nontarget1[n_guess:n_guess + n_swap]
+        dm.responses += np.random.normal(loc=0,
+                                         scale=_precision_to_scale(precision),
+                                         size=N)
+        for row in dm:
+            category = bmt.category(row.target, bmt.DEFAULT_CATEGORIES)
+            lower, upper, proto = bmt.DEFAULT_CATEGORIES[category]
+            if bmt._distance(row.responses, proto) > 0:
+                row.responses += bias
+            else:
+                row.responses -= bias
+        p, gr, b, sr = bmt.fit_mixture_model(
+            x=bmt.response_bias(
+                dm.target,
+                dm.responses,
+                categories=bmt.DEFAULT_CATEGORIES
+            ),
+            x_nontargets=[
+                bmt.response_bias(
+                    dm.nontarget1,
+                    dm.responses,
+                    categories=bmt.DEFAULT_CATEGORIES
+                )
+            ]
+        )
+        assert(math.isclose(precision, p, rel_tol=.25))
+        assert(math.isclose(guess_rate, gr, abs_tol=.1))
+        assert(math.isclose(bias, b, abs_tol=2))
+        assert(math.isclose(swap_rate, sr, abs_tol=.1))
 
 
-def test_precision():
-    """Simulate two sets of responses with various levels of noise."""
+def test_with_bias():
+
     dm = DataMatrix(length=N)
-    dm.m = np.random.randint(0, 359, N)
-    dm.r1 = dm.m + np.random.randint(-5, 5, N)
-    dm.r2 = dm.m + np.random.randint(-25, 25, N)
-    dm.b1 = bmt.response_bias(dm.m, dm.r1)
-    dm.b2 = bmt.response_bias(dm.m, dm.r2)
-    p1, _, = bmt.fit_mixture_model(dm.b1, include_bias=False)
-    p2, _, = bmt.fit_mixture_model(dm.b2, include_bias=False)
-    assert p2 < p1
+    for precision, guess_rate, bias in itertools.product(
+        (500, 2000),
+        (0, .25),
+        (0, 2.5)
+    ):
+        dm.target = np.random.randint(0, 359, N)
+        dm.responses = dm.target[:]
+        n_guess = int(N * guess_rate)
+        dm.responses[:n_guess] = np.random.randint(0, 359, n_guess)
+        dm.responses += np.random.normal(loc=0,
+                                         scale=_precision_to_scale(precision),
+                                         size=N)
+        for row in dm:
+            category = bmt.category(row.target, bmt.DEFAULT_CATEGORIES)
+            lower, upper, proto = bmt.DEFAULT_CATEGORIES[category]
+            if bmt._distance(row.responses, proto) > 0:
+                row.responses += bias
+            else:
+                row.responses -= bias
+        p, gr, b = bmt.fit_mixture_model(
+            x=bmt.response_bias(
+                dm.target,
+                dm.responses,
+                categories=bmt.DEFAULT_CATEGORIES
+            )
+        )
+        assert(math.isclose(precision, p, rel_tol=.25))
+        assert(math.isclose(guess_rate, gr, abs_tol=.1))
+        assert(math.isclose(bias, b, abs_tol=2))
 
 
-def test_guess_rate():
-    """Simulate two sets of responses with various levels of noise."""
+def test_with_swap_rate():
+
     dm = DataMatrix(length=N)
-    dm.m = np.random.randint(0, 359, N)
-    dm.r1 = dm.m + np.random.randint(-10, 10, N)
-    dm.r2 = dm.m + np.random.randint(-10, 10, N)
-    dm.r2[:N // 2] = np.random.randint(0, 359, N // 2)
-    dm.b1 = bmt.response_bias(dm.m, dm.r1)
-    dm.b2 = bmt.response_bias(dm.m, dm.r2)
-    _, gr1 = bmt.fit_mixture_model(dm.b1, include_bias=False)
-    assert math.isclose(gr1, 0, abs_tol=.1)
-    _, gr2 = bmt.fit_mixture_model(dm.b2, include_bias=False)
-    assert math.isclose(gr2, .5, abs_tol=.1)
+    for precision, guess_rate, swap_rate in itertools.product(
+        (500, 2000),
+        (0, .25),
+        (0, .25)
+    ):
+        dm.target = np.random.randint(0, 359, N)
+        dm.nontarget1 = dm.target + 180
+        dm.responses = dm.target[:]
+        n_guess = int(N * guess_rate)
+        n_swap = int(N * swap_rate)
+        dm.responses[:n_guess] = np.random.randint(0, 359, n_guess)
+        dm.responses[n_guess:n_guess +
+                     n_swap] = dm.nontarget1[n_guess:n_guess + n_swap]
+        dm.responses += np.random.normal(loc=0,
+                                         scale=_precision_to_scale(precision),
+                                         size=N)
+        p, gr, sr = bmt.fit_mixture_model(
+            x=bmt.response_bias(dm.target, dm.responses),
+            x_nontargets=[bmt.response_bias(dm.nontarget1, dm.responses)],
+            include_bias=False
+        )
+        assert(math.isclose(precision, p, rel_tol=.25))
+        assert(math.isclose(guess_rate, gr, abs_tol=2))
+        assert(math.isclose(swap_rate, sr, abs_tol=.1))
 
 
-def test_swap_errors():
-    """Simulate three sets of responses with various levels of swap errors."""
+def test_basic():
+
     dm = DataMatrix(length=N)
-    dm.target = np.random.randint(0, 359, N)
-    dm.nontarget1 = np.random.randint(0, 359, N)
-    dm.nontarget2 = np.random.randint(0, 359, N)
-    dm.r1 = dm.target + np.random.randint(-10, 10, N)
-    dm.r2 = dm.target + np.random.randint(-10, 10, N)
-    dm.r2[:N // 8] = dm.nontarget1[:N // 8] + np.random.randint(0, 359, N // 8)
-    dm.r2[N // 8:N // 4] = dm.nontarget2[N // 8:N // 4] + \
-        np.random.randint(0, 359, N // 8)
-    dm.r3 = dm.target + np.random.randint(-10, 10, N)
-    dm.r3[:N // 4] = dm.nontarget1[:N // 4] + np.random.randint(0, 359, N // 4)
-    dm.r3[N // 4:N // 2] = dm.nontarget2[N // 4:N // 2] + \
-        np.random.randint(0, 359, N // 4)
-    _, _, sr1 = bmt.fit_mixture_model(
-        x=bmt.response_bias(dm.target, dm.r1),
-        x_nontargets=[
-            bmt.response_bias(dm.nontarget1, dm.r1),
-            bmt.response_bias(dm.nontarget2, dm.r1)
-        ],
-        include_bias=False
-    )
-    assert math.isclose(sr1, 0, abs_tol=.1)
-    _, _, sr2 = bmt.fit_mixture_model(
-        x=bmt.response_bias(dm.target, dm.r2),
-        x_nontargets=[
-            bmt.response_bias(dm.nontarget1, dm.r2),
-            bmt.response_bias(dm.nontarget2, dm.r2)
-        ],
-        include_bias=False
-    )
-    # Swap errors are underestimated, such that 25% swap errors results in an
-    # swap-rate parameter of around .125.
-    assert math.isclose(sr2, .125, abs_tol=.1)
-    _, _, sr3 = bmt.fit_mixture_model(
-        x=bmt.response_bias(dm.target, dm.r3),
-        x_nontargets=[
-            bmt.response_bias(dm.nontarget1, dm.r3),
-            bmt.response_bias(dm.nontarget2, dm.r3)
-        ],
-        include_bias=False
-    )
-    assert math.isclose(sr3, .25, abs_tol=.1)
+    for precision, guess_rate in itertools.product(
+        (500, 2000),
+        (0, .25)
+    ):
+        dm.target = np.random.randint(0, 359, N)
+        dm.responses = dm.target[:]
+        n_guess = int(N * guess_rate)
+        dm.responses[:n_guess] = np.random.randint(0, 359, n_guess)
+        dm.responses += np.random.normal(loc=0,
+                                         scale=_precision_to_scale(precision),
+                                         size=N)
+        p, gr, = bmt.fit_mixture_model(
+            x=bmt.response_bias(dm.target, dm.responses),
+            include_bias=False
+        )
+        assert(math.isclose(precision, p, rel_tol=.25))
+        assert(math.isclose(guess_rate, gr, abs_tol=2))

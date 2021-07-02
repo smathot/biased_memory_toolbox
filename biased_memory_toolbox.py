@@ -45,7 +45,8 @@ STARTING_SWAP_RATE = .1
 BOUNDS_PRECISION = 0, 10000
 BOUNDS_GUESS_RATE = 0, 1
 BOUNDS_BIAS = -180, 180
-BOUNDS_SWAP_RATE = 0, 1
+BOUNDS_SWAP_RATE = 0, .5
+BOUNDS_GUESS_RATE_WITH_SWAP = 0, .5  # guess + swap rate <= 1
 
 
 def mixture_model_pdf(x, precision=STARTING_PRECISION,
@@ -117,7 +118,7 @@ def fit_mixture_model(x, x_nontargets=None,
         if include_bias:
             bounds.append(BOUNDS_BIAS)
     fit = optimize.minimize(_error, x0=x0, args=x, bounds=bounds)
-    return fit.x
+    return tuple(fit.x)
 
 
 def category(x, categories):
@@ -238,7 +239,13 @@ def _distance(x, y):
     y."""
     
     d = y - x
-    d[d > 180] -= 360
+    if isinstance(d, (int, float)):
+        if d >= 180:
+            return d - 360
+        if d < -180:
+            return d + 360
+        return d
+    d[d >= 180] -= 360
     d[d < -180] += 360
     return d
 
@@ -262,9 +269,9 @@ def aic(args, x):
 def _swap_pdf(x_target, x_nontargets, precision=STARTING_PRECISION,
               guess_rate=STARTING_GUESS_RATE, swap_rate=STARTING_SWAP_RATE,
               bias=STARTING_BIAS):
-
+    x_target = np.radians(x_target)
     pdf_vonmises_target = vonmises.pdf(
-        x=np.radians(x_target),
+        x=x_target,
         kappa=np.radians(precision),
         loc=np.radians(bias)
     )
@@ -273,10 +280,10 @@ def _swap_pdf(x_target, x_nontargets, precision=STARTING_PRECISION,
         kappa=np.radians(precision),
         loc=np.radians(bias)
     ) for x_nontarget in x_nontargets]
-    pdf_uniform = uniform.pdf(x_target, loc=-np.pi, scale=2*np.pi)
+    pdf_uniform = uniform.pdf(x_target, loc=-np.pi, scale=2 * np.pi)
     return (
         pdf_vonmises_target * (1 - guess_rate - swap_rate)
-        + swap_rate * sum(pdf_vonmises_non_targets) / len(x_nontargets)
+        + swap_rate * sum(pdf_vonmises_non_targets) / len(pdf_vonmises_non_targets)
         + pdf_uniform * guess_rate
     )
 
@@ -284,17 +291,18 @@ def _swap_pdf(x_target, x_nontargets, precision=STARTING_PRECISION,
 def _swap_error(args, x):
     
     return -np.sum(np.log(_swap_pdf(x[0], x[1], *args)))
-    
+
 
 def _fit_swap_model(x, x_nontargets=None,
                     include_bias=True, x0=None, bounds=None):
+    
     if x0 is None:
         x0 = [STARTING_PRECISION, STARTING_GUESS_RATE]
         x0.append(STARTING_SWAP_RATE)
         if include_bias:
             x0.append(STARTING_BIAS)
     if bounds is None:
-        bounds = [BOUNDS_PRECISION, BOUNDS_GUESS_RATE]
+        bounds = [BOUNDS_PRECISION, BOUNDS_GUESS_RATE_WITH_SWAP]
         bounds.append(BOUNDS_SWAP_RATE)
         if include_bias:
             bounds.append(BOUNDS_BIAS)
