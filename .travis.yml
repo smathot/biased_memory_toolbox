@@ -5,5 +5,5 @@ python:
   - "3.9"
 before_install:
   - pip install numpy --upgrade
-  - pip install scipy
+  - pip install scipy python-datamatrix
 script: pytest
