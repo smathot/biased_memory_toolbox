@@ -1,8 +1,9 @@
-# !coding=utf-8
+# coding=utf-8
 
 import re
 from academicmarkdown import build
 
+build.postMarkdownFilters = []
 with open('readme-template.md') as fd:
     text = fd.read()
 for m in re.finditer('```python(?P<code>.*?)```', text, re.DOTALL):

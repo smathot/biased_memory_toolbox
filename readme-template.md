@@ -106,7 +106,7 @@ sns.distplot(dm.response_bias, kde=False)
 plt.savefig('example.png')
 ```
 
-![](example.png)
+![](https://github.com/smathot/biased_memory_toolbox/raw/master/example.png)
 
 We can also fit a model that takes into account swap errors, as described by [Bays, Catalao, and Husain (2009)](https://doi.org/10.1167/9.10.7). To do so, we need to also specify the response bias (or plain error) with respect to the non-target items.
 

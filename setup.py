@@ -39,7 +39,7 @@ setup(
     license=u'GNU GPL Version 3',
     py_modules=['biased_memory_toolbox'],
     url=u'https://github.com/smathot/biased_memory_toolbox',
-    install_requires=['scipy'],
+    install_requires=['scipy', 'numpy'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',

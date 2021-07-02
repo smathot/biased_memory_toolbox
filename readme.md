@@ -36,20 +36,20 @@ dm = io.readtxt('example-data/example-participant.csv')
 
 
 
-As a first step, which is not related to mixture modeling per se, we check whether the participant performed significantly (*p* < .05) above chance. This is done with a permutation test that is implemented as `test_chance_performance()`. Here, low p-values indicate that performance deviates from chance.
+As a first step, which is not related to mixture modeling per se, we check whether the participant performed significantly (p < .05) above chance. This is done with a permutation test that is implemented as `test_chance_performance()`. Here, low p-values indicate that performance deviates from chance.
 
 
 
 ```python
 import biased_memory_toolbox as bmt
 
-t, *p* = bmt.test_chance_performance(dm.memory_hue, dm.response_hue)
-print('testing performance: t = {:.4f}, *p* = {:.4f}'.format(t, p))
+t, p = bmt.test_chance_performance(dm.memory_hue, dm.response_hue)
+print('testing performance: t = {:.4f}, p = {:.4f}'.format(t, p))
 ```
 
 __Output:__
 ``` .text
-testing performance: *t* = -56.7938, *p* = 0.0000
+testing performance: t = -56.6385, p = 0.0000
 ```
 
 
@@ -145,7 +145,7 @@ sns.distplot(dm.response_bias, kde=False)
 plt.savefig('example.png')
 ```
 
-![](example.png)
+![](https://github.com/smathot/biased_memory_toolbox/raw/master/example.png)
 
 We can also fit a model that takes into account swap errors, as described by [Bays, Catalao, and Husain (2009)](https://doi.org/10.1167/9.10.7). To do so, we need to also specify the response bias (or plain error) with respect to the non-target items.
 
@@ -193,7 +193,7 @@ print(
 
 __Output:__
 ``` .text
-precision: 785.2130, guess rate: 0.0000, bias: 1.3879, swap_rate: 0.0266
+precision: 1458.9628, guess rate: 0.0502, bias: 1.2271, swap_rate: 0.0191
 ```
 
 
