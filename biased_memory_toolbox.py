@@ -21,7 +21,7 @@ import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
@@ -263,7 +263,8 @@ def aic(args, x):
     
     """A helper function used for Akaike information criterion."""
     
-    return 2 * len(args) - 2 * np.log(np.prod(mixture_model_pdf(x, *args)))
+    return 2 * len(args) - 2 * \
+        np.log(np.prod(mixture_model_pdf(x, *args), dtype=np.float128))
 
 
 def _swap_pdf(x_target, x_nontargets, precision=STARTING_PRECISION,
