@@ -16,12 +16,14 @@ You should have received a copy of the GNU General Public License
 along with biased memory toolbox.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
+import warnings
 import random
 import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
@@ -263,8 +265,16 @@ def aic(args, x):
     
     """A helper function used for Akaike information criterion."""
     
-    return 2 * len(args) - 2 * \
-        np.log(np.prod(mixture_model_pdf(x, *args), dtype=np.float128))
+    pdf = bmt.mixture_model_pdf(x, *args)
+    if hasattr(np, 'longdouble'):
+        dtype = np.longdouble
+    else:
+        dtype = np.float64
+    prod = np.prod(pdf, dtype=dtype)
+    if prod == 0:
+        warnings.warn('overflow in np.prod(), usin smallest possible float')
+        prod = sys.float_info.min
+    return 2 * len(args) - 2 * np.log(prod)
 
 
 def _swap_pdf(x_target, x_nontargets, precision=STARTING_PRECISION,
