@@ -23,7 +23,7 @@ import numpy as np
 from scipy.stats import vonmises, uniform, ttest_ind
 from scipy import optimize
 
-__version__ = '1.2.2'
+__version__ = '1.2.3'
 
 # These default categories have been established in a separate validation
 # experiment. Each tuple indicates a start_value, end_value, and prototype.
@@ -265,7 +265,7 @@ def aic(args, x):
     
     """A helper function used for Akaike information criterion."""
     
-    pdf = bmt.mixture_model_pdf(x, *args)
+    pdf = mixture_model_pdf(x, *args)
     if hasattr(np, 'longdouble'):
         dtype = np.longdouble
     else:
