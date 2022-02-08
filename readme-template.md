@@ -3,9 +3,18 @@
 *A Python toolbox for mixture modeling of data from visual-working-memory experiments*
 
 Cherie Zhou (@cherieai) and Sebastiaan Mathôt (@smathot) <br />
-Copyright 2020 - 2021
+Copyright 2020 - 2022
 
 ![](https://travis-ci.com/smathot/biased_memory_toolbox.svg?branch=master)
+
+
+## Contents
+
+- [Citation](#citation)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Function reference](#function-reference)
+- [License](#license)
 
 
 ## Citation
@@ -64,7 +73,7 @@ print('precision: {:.4f}, guess rate: {:.4f}'.format(precision, guess_rate))
 
 Now let's fit a slightly more complex model that also includes a bias parameter. To do so, we first calculate the response 'bias', which is similar to the response error except that it is recoded such that positive values reflect a response error towards the prototype of the category that the memorandum belongs to. For example, if the participant saw a slightly aqua-ish shade of green but reproduced a pure green, then this would correspond to a positive response bias for that response.
 
-To calculate the response bias we need to specify a `dict` with category boundaries and prototypes when calling `response_bias()`. A sensible default (`DEFAULT_CATEGORIES`), based on ratings of human participants, is provided with the toolbox.
+To calculate the response bias we need to specify a `dict` with category boundaries and prototypes when calling `response_bias()`. A sensible default (`DEFAULT_CATEGORIES`), based on ratings of human participants from [Zhou, Mathôt, & Lorist, 2021b](http://dx.doi.org/10.1101/2021.11.23.469689), is provided with the toolbox. Another set of ratings, from [Zhou, Mathôt, & Lorist, 2021a](https://osf.io/puq4v/), is provided as `CORTEX_CATEGORIES`.
 
 ```python
 dm.response_bias = bmt.response_bias(
