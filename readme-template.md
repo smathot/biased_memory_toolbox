@@ -148,6 +148,10 @@ print(
 )
 ```
 
+## Function reference
+
+[API]
+
 
 ## License
 

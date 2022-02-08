@@ -51,7 +51,7 @@ print('testing performance: t = {:.4f}, p = {:.4f}'.format(t, p))
 
 __Output:__
 ``` .text
-testing performance: t = -57.0220, p = 0.0000
+testing performance: t = -54.9315, p = 0.0000
 ```
 
 
@@ -203,6 +203,133 @@ precision: 1458.9628, guess rate: 0.0502, bias: 1.2271, swap_rate: 0.0191
 ```
 
 
+
+## Function reference
+
+**<span style="color:purple">biased&#95;memory&#95;toolbox.category</span>_(x, categories)_**
+
+
+Gets the category to which x belongs. For example, if x corresponds to a
+slightly orangy shade of red, then the category would be 'red'.
+
+
+#### Parameters
+* x: float or int :  A value in degrees (0 - 360)
+* categories: dict :  See reponse_bias()
+
+#### Returns
+<b><i>str</i></b>  A category label
+
+**<span style="color:purple">biased&#95;memory&#95;toolbox.fit&#95;mixture&#95;model</span>_(x, x_nontargets=None, include_bias=True, x0=None, bounds=None)_**
+
+
+Fits the biased mixture model to a dataset. The input to the mixture
+model should generally be a response bias as determined by
+`response_bias()` when the bias parameter is fit, or a signed response
+error when no bias parameter is fit.
+
+
+#### Parameters
+* x: array_like :  An array, DataMatrix column, or other iterable object of response
+	biases
+* x_nontargets: list, optional :  A list of arrays, DataMatrix columns, or other iterable objects of
+	response biases relative to non-targets. If this argument is
+	provided, a swap rate is returned as a final parameter.
+* include_bias: bool, optional :  Indicates whether the bias parameter should be fit as well.
+* x0: list, optional :  A list of starting values for the parameters. Order: precision, guess
+	rate, bias. If no starting value is provided for a parameter, then it
+	is left at the default value of `mixture_model_pdf()`.
+* bounds: list, optional :  A list of (upper, lower) bound tuples for the parameters. If no value
+	is provided, then default values are used.
+
+#### Returns
+<b><i>tuple</i></b>  A tuple with parameters. Depending on the arguments these are on of the
+	following:
+	
+	- (precision, guess rate)
+	- (precision, guess rate, bias)
+	- (precision, guess rate, swap rate)
+	- (precision, guess rate, bias, swap rate)
+
+**<span style="color:purple">biased&#95;memory&#95;toolbox.mixture&#95;model&#95;pdf</span>_(x, precision=500, guess_rate=0.1, bias=0)_**
+
+
+Returns a probability density function for a mixture model.
+
+
+#### Parameters
+* x: array_like :  A list (or other iterable object) of values for the x axis. For example
+	`range(-180, 181)` would generate the PDF for every relevant value.
+* precision: float, optional :  The precision (or kappa) parameter. This is inversely related to the
+	standard deviation, and is a value in degrees.
+* guess_rate: float, optional :  The proportion of guess responses (0 - 1).
+* bias: float, optional :  The bias (or loc) parameter in degrees.
+
+#### Returns
+<b><i>array</i></b>  An array with probability densities for each value of x.
+
+**<span style="color:purple">biased&#95;memory&#95;toolbox.prototype</span>_(x, categories)_**
+
+
+Gets the prototype for the category to which x belongs. For example, if
+x corresponds to a slightly orangy shade of red, then the prototype would
+be the hue of a prototypical shade of red.
+
+
+#### Parameters
+* x: float or int :  A value in degrees (0 - 360)
+* categories: dict :  See reponse_bias()
+
+#### Returns
+<b><i>float or int</i></b>  A prototype value in degrees (0 360)
+
+**<span style="color:purple">biased&#95;memory&#95;toolbox.response&#95;bias</span>_(memoranda, responses, categories=None)_**
+
+
+Calculates the response bias, which is the error between a response and
+a memorandum in the direction of the prototype for the category to which
+the memorandum belongs. For example, if the memorandum was an orangy shade
+of red, then a positive value would indicate an error towards a
+prototypical red, and a negative value would indicate an error towards the
+yellow category.
+
+
+#### Parameters
+* memoranda: array_like :  An array, DataMatrix column, or other iterable object with memoranda
+	values in degrees (0 - 360)
+* responses: array_like :  An array, DataMatrix column, or other iterable object with response
+	values in degrees (0 - 360)
+* categories: dict, optional :  A dict that defines the categories. Keys are names of categories and
+	values are (start_value, end_value, prototype) values that indicate
+	where categories begin and end, and what the prototypical value is.
+	The start_value and prototpe can be negative and should be smaller than
+	the end value.
+	
+	See `biased_memory_toolbox.DEFAULT_CATEGORIES` and
+	`biased_memory_toolbox.CORTEX_CATEGORIES` for two sets of category
+	ratings.
+
+#### Returns
+<b><i>list</i></b>  A list of response_bias values.
+
+**<span style="color:purple">biased&#95;memory&#95;toolbox.test&#95;chance&#95;performance</span>_(memoranda, responses)_**
+
+
+Tests whether responses are above chance. This is done by first
+determining the real error and the memoranda, and then determinining the
+shuffled error between the memoranda and the shuffled responses. Finally,
+an independent t-test is done to compare the real and shuffled error. The
+exact values will vary because the shuffling is random.
+
+
+#### Parameters
+* memoranda: array_like :  An array, DataMatrix column, or other iterable object with memoranda
+	values in degrees (0 - 360)
+* responses: array_like :  An array, DataMatrix column, or other iterable object with response
+	values in degrees (0 - 360)
+
+#### Returns
+<b><i>tuple</i></b>  A (t_value, p_value) tuple.
 
 
 ## License
